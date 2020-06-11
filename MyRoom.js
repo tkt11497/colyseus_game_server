@@ -42,6 +42,7 @@ exports.MyRoom = class extends colyseus.Room {
     this.clock.start();
     this.clock.setInterval(() => {
       console.log('started')
+       this.state.gameCountDown=10
       let countdown=setInterval(()=> {
         --this.state.gameCountDown;
         console.log(this.state.gameCountDown)
@@ -58,8 +59,21 @@ exports.MyRoom = class extends colyseus.Room {
         {
         for( let i in this.playedPlayers){
           console.log( this.playedPlayers[i].client.send,'sdsd')
+          let bonus=null;
+          if(Array.isArray(this.playedPlayers[i].data.animal)){
+            //if both number in animal array includes in result array user win bounus is 5
+            if(result.includes(this.playedPlayers[i].data.animal[0])&&
+              result.includes(this.playedPlayers[i].data.animal[1]))
+            {
+              bonus=5
+            }else{
+              bonus=0
+            }
             
-          let bonus=result.filter(int=>int==this.playedPlayers[i].data.animal).length
+          }else{
+            bonus=result.filter(int=>int==this.playedPlayers[i].data.animal).length
+          }  
+          
           let message=''
           if(bonus==0){
             this.state.players[this.playedPlayers[i].client.sessionId].money-=this.playedPlayers[i].data.amount
@@ -85,16 +99,22 @@ exports.MyRoom = class extends colyseus.Room {
             console.log(this.state.players[this.playedPlayers[i].client.sessionId].money)
             message='you win'
           }
-          
-          this.playedPlayers[i].client.send('result',
-          {result:result,
+          if(bonus==5){
+            this.state.players[this.playedPlayers[i].client.sessionId].money+=this.playedPlayers[i].data.amount*5
+            //*5 plus amount
+            console.log(this.state.players[this.playedPlayers[i].client.sessionId].money)
+            message='you win'
+          }
+          this.playedPlayers[i].client.send('played',
+          {
             amount:this.state.players[this.playedPlayers[i].client.sessionId].money,
             message:message
           })
         }
       }
+      this.broadcast('result',{result:result})
         this.playedPlayers={} //reset played players
-          this.state.gameCountDown=10
+          // this.state.gameCountDown=10
           clearInterval(countdown)
         };
         }, 1000);
@@ -105,6 +125,7 @@ exports.MyRoom = class extends colyseus.Room {
       console.log(client)
       if(this.state.gameCountDown==0){  // dont let him play if game count down is 0
         //to DO: response something
+        client.send('timeout','sry bet next round')
         return
       }
       this.playedPlayers[client.sessionId]={client,data}
