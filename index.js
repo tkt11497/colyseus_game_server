@@ -3,11 +3,11 @@ const express = require('express');
 const cors = require('cors');
 const colyseus = require('colyseus');
 const monitor = require("@colyseus/monitor").monitor;
+const PORT = process.env.PORT || 5000
 // const socialRoutes = require("@colyseus/social/express").default;
 
 const MyRoom = require('./MyRoom').MyRoom;
 
-const port = process.env.PORT || 2567;
 const app = express()
 
 app.use(cors());
@@ -26,5 +26,5 @@ gameServer.onShutdown(()=>{
 })
 
 
-gameServer.listen(port);
-console.log(`Listening on ws://localhost:${ port }`)
+gameServer.listen(PORT);
+console.log(`Listening on ws://localhost:${ PORT }`)
